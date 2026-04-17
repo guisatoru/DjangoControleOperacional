@@ -143,6 +143,8 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 16px;
+  min-height: 1330px;
+  align-content: start;
 }
 
 .employee-card {
@@ -205,6 +207,7 @@
 
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -298,6 +301,7 @@
 
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -473,6 +477,8 @@
 @media (min-width: 900px) {
   .employees-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-height: 1980px;
+    align-content: start;
   }
 
   .modal-grid {
@@ -483,5 +489,7 @@
 @media (min-width: 1280px) {
   .employees-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-height: 1320px;
+    align-content: start;
   }
 }

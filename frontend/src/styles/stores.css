@@ -2,6 +2,8 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 16px;
+  min-height: 1180px;
+  align-content: start;
 }
 
 .store-card {
@@ -39,6 +41,7 @@
 
   display: -webkit-box;
   -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -137,11 +140,15 @@
 @media (min-width: 900px) {
   .stores-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-height: 1710px;
+    align-content: start;
   }
 }
 
 @media (min-width: 1280px) {
   .stores-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-height: 1180px;
+    align-content: start;
   }
 }
