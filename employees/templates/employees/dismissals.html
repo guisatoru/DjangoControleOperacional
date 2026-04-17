@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Demissões TOTVS{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/divergences.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<h1>Demissões TOTVS</h1>
+
+<section>
+    <h2>Resumo</h2>
+
+    <p>Total de demitidos TOTVS: <span class="count">{{ dismissed_employees|length }}</span></p>
+    <p>Divergências encontradas: <span class="count">{{ dismissal_divergences|length }}</span></p>
+</section>
+
+<section>
+    <h2>Demitidos com divergência na Gestão</h2>
+
+    {% if dismissal_divergences %}
+        <table>
+            <thead>
+                <tr>
+                    <th>RE</th>
+                    <th>Nome</th>
+                    <th>Data demissão</th>
+                    <th>Status TOTVS</th>
+                    <th>Status Gestão</th>
+                    <th>Loja Gestão</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for employee in dismissal_divergences %}
+                    <tr>
+                        <td>{{ employee.employee_code }}</td>
+                        <td>{{ employee.name }}</td>
+                        <td>{{ employee.dismissal_date|date:"d/m/Y" }}</td>
+                        <td>{{ employee.payroll_status }}</td>
+                        <td>{{ employee.management_status }}</td>
+                        <td>{{ employee.management_store_name }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p class="empty">Nenhuma divergência de demissão encontrada.</p>
+    {% endif %}
+</section>
+
+{% endblock %}

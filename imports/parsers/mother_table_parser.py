@@ -34,11 +34,10 @@ def parse_mother_table_file(file_path):
 
     stores = []
 
+    active_statuses = ["ATIVO", "FORA DA GESTAO", "FORA DA GESTÃO"]
+
     for _, row in dataframe.iterrows():
         status = normalize_text(get_value(row, ["STATUS"])).upper()
-
-        if status not in ["ATIVO", "FORA DA GESTAO", "FORA DA GESTÃO"]:
-            continue
 
         cost_center = normalize_cost_center(
             get_value(row, ["CENTRO DE CUSTO"])
@@ -71,7 +70,7 @@ def parse_mother_table_file(file_path):
             "neighborhood": normalize_text(
                 get_value(row, ["BAIRRO"])
             ),
-            "is_active": status == "ATIVO",
+            "is_active": status in active_statuses,
         }
 
         stores.append(store_data)

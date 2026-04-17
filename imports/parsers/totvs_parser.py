@@ -8,6 +8,11 @@ from core.utils.normalizers import (
     parse_date,
 )
 
+IGNORED_COST_CENTERS = {
+    "999999990010",
+    "999999990050",
+    "999999990020",
+}
 
 def normalize_dataframe_columns(dataframe):
     dataframe = dataframe.copy()
@@ -46,6 +51,13 @@ def parse_totvs_file(file_path):
         if not employee_code:
             continue
 
+        cost_center = normalize_cost_center(
+            get_value(row, ["C.C. MOVTO"])
+        )
+
+        if cost_center in IGNORED_COST_CENTERS:
+            continue
+
         payroll_status = normalize_text(
             get_value(row, ["SIT. FOLHA"])
         ).upper()
@@ -55,9 +67,7 @@ def parse_totvs_file(file_path):
             "name": normalize_text(
                 get_value(row, ["NOME COMPLET"])
             ),
-            "cost_center": normalize_cost_center(
-                get_value(row, ["C.C. MOVTO"])
-            ),
+            "cost_center": cost_center,
             "totvs_job_title": normalize_text(
                 get_value(row, ["DESC.FUNCAO"])
             ),
@@ -75,6 +85,7 @@ def parse_totvs_file(file_path):
                 get_value(row, ["DT. DEMISSAO"])
             ),
             "is_active": payroll_status != "D",
+            "counts_in_store_headcount": payroll_status not in ["D", "A"],
         }
 
         employees.append(employee_data)

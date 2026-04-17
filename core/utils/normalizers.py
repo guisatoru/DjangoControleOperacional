@@ -36,7 +36,7 @@ def normalize_cost_center(value):
     if not digits:
         return ""
 
-    return digits
+    return digits.lstrip("0") or "0"
 
 
 def normalize_text(value):

@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import Employee
 
+
 @admin.register(Employee)
 class EmployeeAdmin(admin.ModelAdmin):
     list_display = [
@@ -9,6 +10,9 @@ class EmployeeAdmin(admin.ModelAdmin):
         "cost_center",
         "payroll_status",
         "store",
+        "management_store_name",
+        "management_job_title",
+        "management_status",
         "is_active",
     ]
 
@@ -17,10 +21,18 @@ class EmployeeAdmin(admin.ModelAdmin):
         "name",
         "cost_center",
         "totvs_store_name",
+        "management_store_name",
+        "management_job_title",
     ]
 
     list_filter = [
         "is_active",
         "payroll_status",
         "management_status",
+        "store",
+    ]
+
+    readonly_fields = [
+        "created_at",
+        "updated_at",
     ]

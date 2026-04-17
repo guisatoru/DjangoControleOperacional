@@ -1,0 +1,24 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Sistema de Gestão{% endblock %}</title>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <nav style="margin-bottom: 24px;">
+        <a href="/divergencias/">Divergências</a>
+        |
+        <a href="/demissoes/">Demissões</a>
+        |
+        <a href="/admin/">Admin</a>
+    </nav>
+
+    {% block content %}{% endblock %}
+
+</body>
+</html>
