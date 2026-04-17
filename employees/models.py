@@ -74,7 +74,6 @@ class Employee(models.Model):
         related_name="employees"
     )
 
-    totvs_store_name = models.CharField(max_length=255, blank=True, null=True)
     cost_center = models.CharField(max_length=50, blank=True, null=True)
 
     totvs_job_title = models.CharField(max_length=255, blank=True, null=True)

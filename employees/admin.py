@@ -20,7 +20,6 @@ class EmployeeAdmin(admin.ModelAdmin):
         "employee_code",
         "name",
         "cost_center",
-        "totvs_store_name",
         "management_store_name",
         "management_job_title",
     ]
