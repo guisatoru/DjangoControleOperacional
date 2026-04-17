@@ -1,4 +1,5 @@
 import { useState } from "react";
+import StoreModal from "../components/StoreModal";
 
 const ITEMS_PER_PAGE = 12;
 
@@ -6,6 +7,8 @@ function StoresPage({ stores, employees, loading, errorMessage }) {
   const [searchText, setSearchText] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+
+  const [selectedStore, setSelectedStore] = useState(null);
 
   function getActiveEmployeesCountByStore(storeId) {
     return employees.filter((employee) => {
@@ -208,7 +211,11 @@ function StoresPage({ stores, employees, loading, errorMessage }) {
 
       <div className="stores-grid">
         {storesToShow.map((store) => (
-          <article className="store-card" key={store.id}>
+            <article
+                className="store-card"
+                key={store.id}
+                onClick={() => setSelectedStore(store)}
+            >
             <div className="store-card-header">
               <div>
                 <h2>{store.name}</h2>
@@ -292,6 +299,11 @@ function StoresPage({ stores, employees, loading, errorMessage }) {
           Próxima
         </button>
       </div>
+      <StoreModal
+        store={selectedStore}
+        employees={employees}
+        onClose={() => setSelectedStore(null)}
+      />
     </div>
   );
 }
