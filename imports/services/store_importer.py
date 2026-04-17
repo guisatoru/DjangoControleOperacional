@@ -28,6 +28,7 @@ def import_stores_from_mother_table(parsed_stores):
             "zip_code": store_data.get("zip_code"),
             "street": store_data.get("street"),
             "neighborhood": store_data.get("neighborhood"),
+            "city": store_data.get("city"),
             "is_active": store_data.get("is_active"),
         }
 

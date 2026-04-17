@@ -70,6 +70,9 @@ def parse_mother_table_file(file_path):
             "neighborhood": normalize_text(
                 get_value(row, ["BAIRRO"])
             ),
+            "city": normalize_text(
+                get_value(row, ["MUNICIPIO"])
+            ),
             "is_active": status in active_statuses,
         }
 
