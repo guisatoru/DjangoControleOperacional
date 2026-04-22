@@ -10,37 +10,13 @@ function StoresPage({ stores, employees, loading, errorMessage }) {
 
   const [selectedStore, setSelectedStore] = useState(null);
 
-  function getActiveEmployeesCountByStore(storeId) {
-    return employees.filter((employee) => {
-      return (
-        employee.is_active &&
-        employee.counts_in_store_headcount &&
-        employee.store_id === storeId
-      );
-    }).length;
-  }
-
   function getStoreAnalysis(store) {
-    const activeEmployees = getActiveEmployeesCountByStore(store.id);
-    const contractedHeadcount = store.contracted_headcount || 0;
-    const difference = activeEmployees - contractedHeadcount;
-
-    let status = "balanced";
-
-    if (difference > 0) {
-      status = "excess";
-    }
-
-    if (difference < 0) {
-      status = "deficit";
-    }
-
     return {
       ...store,
-      activeEmployees,
-      contractedHeadcount,
-      difference,
-      status,
+      activeEmployees: store.management_headcount || 0,
+      contractedHeadcount: store.contracted_headcount || 0,
+      difference: store.headcount_difference || 0,
+      status: store.headcount_status || "balanced",
     };
   }
 

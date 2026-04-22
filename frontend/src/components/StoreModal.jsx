@@ -1,4 +1,22 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+
+function normalizeText(value) {
+  if (!value) {
+    return "";
+  }
+
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toUpperCase();
+}
+
+function managementStatusCounts(status) {
+  const normalizedStatus = normalizeText(status);
+
+  return ["ATIVO", "AVISO", "FERIAS"].includes(normalizedStatus);
+}
 
 function StoreModal({ store, employees, onClose }) {
   useEffect(() => {
@@ -17,15 +35,30 @@ function StoreModal({ store, employees, onClose }) {
     };
   }, [store, onClose]);
 
+  const [employeeSearch, setEmployeeSearch] = useState("");
   if (!store) {
     return null;
   }
 
   const storeEmployees = employees.filter((employee) => {
     return (
-      employee.is_active &&
-      employee.counts_in_store_headcount &&
-      employee.store_id === store.id
+      normalizeText(employee.management_store_name) === normalizeText(store.name) &&
+      managementStatusCounts(employee.management_status)
+    );
+  });
+
+  const filteredStoreEmployees = storeEmployees.filter((employee) => {
+    const search = normalizeText(employeeSearch);
+
+    if (!search) {
+      return true;
+    }
+
+    return (
+      normalizeText(employee.name).includes(search) ||
+      normalizeText(employee.employee_code).includes(search) ||
+      normalizeText(employee.management_job_title).includes(search) ||
+      normalizeText(employee.management_status).includes(search)
     );
   });
 
@@ -38,6 +71,14 @@ function StoreModal({ store, employees, onClose }) {
         className="store-modal"
         onClick={(event) => event.stopPropagation()}
       >
+        <div className="store-modal-search">
+          <input
+            type="text"
+            value={employeeSearch}
+            onChange={(event) => setEmployeeSearch(event.target.value)}
+            placeholder="Pesquisar colaborador por nome, RE, função ou status..."
+          />
+        </div>
         <div className="modal-header">
           <div>
             <h2>{store.name}</h2>
@@ -110,7 +151,7 @@ function StoreModal({ store, employees, onClose }) {
           <div className="modal-grid">
             <p>
               <strong>Nome Gestão:</strong>
-              <span>{store.management_link_name || "-"}</span>
+              <span>{store.management_store_name || "-"}</span>
             </p>
 
             <p>
@@ -161,13 +202,13 @@ function StoreModal({ store, employees, onClose }) {
         <div className="modal-section">
           <h3>Colaboradores ativos contabilizados</h3>
 
-          {storeEmployees.length === 0 && (
+          {filteredStoreEmployees.length === 0 && (
             <p className="page-message">Nenhum colaborador ativo encontrado para esta loja.</p>
           )}
 
-          {storeEmployees.length > 0 && (
+          {filteredStoreEmployees.length > 0 && (
             <div className="store-employees-list">
-              {storeEmployees.map((employee) => (
+              {filteredStoreEmployees.map((employee) => (
                 <div className="store-employee-row" key={employee.id}>
                   <div>
                     <strong>{employee.name}</strong>
