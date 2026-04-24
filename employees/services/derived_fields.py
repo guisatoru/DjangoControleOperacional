@@ -1,4 +1,6 @@
 from employees.models import Employee
+from employees.services.dismissal_sync import sync_dismissal_records
+from employees.services.termination_service import refresh_termination_cache_fields
 from stores.services.headcount_recalculation import recalculate_store_headcount_data
 
 
@@ -48,4 +50,6 @@ def refresh_employee_derived_fields():
 
 def refresh_employee_and_store_derived_fields():
     refresh_employee_derived_fields()
+    refresh_termination_cache_fields()
     recalculate_store_headcount_data()
+    sync_dismissal_records()

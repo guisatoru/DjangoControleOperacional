@@ -1,63 +1,151 @@
+function ModuleIcon({ type }) {
+  if (type === "stores") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M5 10h14" />
+        <path d="M7 10V19h10v-9" />
+        <path d="M4 7.5 6 4h12l2 3.5" />
+      </svg>
+    );
+  }
+
+  if (type === "employees") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="9" cy="9" r="3" />
+        <path d="M4.5 18a4.5 4.5 0 0 1 9 0" />
+        <circle cx="17" cy="10" r="2.5" />
+        <path d="M14.5 18a3.6 3.6 0 0 1 5 0" />
+      </svg>
+    );
+  }
+
+  if (type === "dismissals") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6 5h12" />
+        <path d="M8 5v14h8V5" />
+        <path d="M10 10h4" />
+      </svg>
+    );
+  }
+
+  if (type === "terminations") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M7 4h10" />
+        <path d="M12 4v8" />
+        <path d="M8.5 12a4 4 0 1 0 7 0" />
+        <path d="M6 20h12" />
+      </svg>
+    );
+  }
+
+  if (type === "imports") {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M12 5v9" />
+        <path d="m8.5 10.5 3.5 3.5 3.5-3.5" />
+        <path d="M5 18h14" />
+      </svg>
+    );
+  }
+
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M6 6h12v12H6z" />
+      <path d="M9 9h6" />
+      <path d="M9 12h6" />
+      <path d="M9 15h4" />
+    </svg>
+  );
+}
+
 function HomePage({ onNavigate }) {
-  const modules = [
+  const moduleSections = [
     {
-      key: "employees",
-      title: "Colaboradores",
-      description: "Consulte a base, filtros e divergencias entre sistemas.",
-      buttonLabel: "Abrir colaboradores",
+      title: "Gestao",
+      accentClass: "blue",
+      items: [
+        {
+          key: "stores",
+          title: "Lojas",
+          description: "Quadro contratado, headcount e comparacao por unidade.",
+        },
+        {
+          key: "employees",
+          title: "Colaboradores",
+          description: "Compare TOTVS, Gestao e GeoVictoria no mesmo cadastro.",
+        },
+        {
+          key: "dismissals",
+          title: "Demissoes",
+          description: "Consulte desligamentos e veja alinhamento entre bases.",
+        },
+        {
+          key: "terminations",
+          title: "Terminos",
+          description: "Acompanhe prorrogar, manter e dar termino com historico.",
+        },
+      ],
     },
     {
-      key: "stores",
-      title: "Lojas",
-      description: "Veja quadro contratado, headcount e detalhes por unidade.",
-      buttonLabel: "Abrir lojas",
-    },
-    {
-      key: "imports",
-      title: "Importacoes",
-      description: "Envie planilhas de Tabela Mae, TOTVS e Gestao de Pessoas.",
-      buttonLabel: "Abrir importacoes",
-    },
-    {
-      key: "dismissals",
-      title: "Demissoes",
-      description: "Espaco reservado para o modulo de desligamentos.",
-      buttonLabel: "Abrir demissoes",
-    },
-    {
-      key: "reports",
-      title: "Relatorios",
-      description: "Area futura para analises e consolidacoes gerenciais.",
-      buttonLabel: "Abrir relatorios",
+      title: "Sistema",
+      accentClass: "orange",
+      items: [
+        {
+          key: "imports",
+          title: "Importacoes",
+          description: "Envie Tabela Mae, TOTVS e Gestao de Pessoas.",
+        },
+        {
+          key: "reports",
+          title: "Relatorios",
+          description: "Area futura para consolidacoes e indicadores.",
+        },
+      ],
     },
   ];
 
   return (
     <div className="module-page">
-      <div className="page-header">
-        <div>
-          <span className="breadcrumb">Plataforma / Inicio</span>
-          <h1>Central de modulos</h1>
-          <p>Escolha abaixo para qual area do sistema voce quer ir.</p>
-        </div>
-      </div>
+      <section className="home-hero">
+        <span className="home-hero-tag">Sistema de gestao</span>
+        <h1>Ola, Administrador Local</h1>
+        <p>Selecione um servico para gerenciar a operacao de forma simples e direta.</p>
+      </section>
 
-      <div className="home-module-grid">
-        {modules.map((module) => (
-          <article className="home-module-card" key={module.key}>
-            <h2>{module.title}</h2>
-            <p>{module.description}</p>
+      {moduleSections.map((section) => (
+        <section className="home-section" key={section.title}>
+          <div className={`home-section-header ${section.accentClass}`}>
+            <span>{section.title}</span>
+          </div>
 
-            <button
-              type="button"
-              className="home-module-button"
-              onClick={() => onNavigate(module.key)}
-            >
-              {module.buttonLabel}
-            </button>
-          </article>
-        ))}
-      </div>
+          <div className="home-module-grid">
+            {section.items.map((module) => (
+              <article className="home-module-card" key={module.key}>
+                <div className="home-module-icon">
+                  <ModuleIcon type={module.key} />
+                </div>
+
+                <div className="home-module-copy">
+                  <h2>{module.title}</h2>
+                  <p>{module.description}</p>
+                </div>
+
+                <button
+                  type="button"
+                  className="home-module-button"
+                  onClick={() => onNavigate(module.key)}
+                  aria-label={`Abrir ${module.title}`}
+                >
+                  <span />
+                </button>
+              </article>
+            ))}
+          </div>
+        </section>
+      ))}
     </div>
   );
 }

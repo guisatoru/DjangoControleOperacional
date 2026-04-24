@@ -161,5 +161,9 @@ GEOVICTORIA_USER_LIST_URL = os.getenv(
     "GEOVICTORIA_USER_LIST_URL",
     "https://customerapi.geovictoria.com/api/v1/User/ListComplete",
 )
+GEOVICTORIA_TIMEOFF_URL = os.getenv(
+    "GEOVICTORIA_TIMEOFF_URL",
+    "https://customerapi.geovictoria.com/api/v1/TimeOff/Get",
+)
 GEOVICTORIA_USER = os.getenv("GEOVICTORIA_USER", "")
 GEOVICTORIA_PASSWORD = os.getenv("GEOVICTORIA_PASSWORD", "")

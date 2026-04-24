@@ -7,6 +7,16 @@ class Employee(models.Model):
     def has_management_duplicate_records(self):
         return self.management_non_transferred_records_count > 1
 
+    def is_dismissed(self):
+        payroll_status = normalize_column_name(self.payroll_status)
+        management_status = normalize_column_name(self.management_status)
+
+        return (
+            payroll_status == "D"
+            or management_status == "DEMITIDO"
+            or self.dismissal_date is not None
+        )
+
     def has_store_divergence(self):
         store_names = self.get_store_names_for_comparison()
 
@@ -145,6 +155,14 @@ class Employee(models.Model):
     has_status_divergence_cached = models.BooleanField(default=False)
     has_management_duplicate_cached = models.BooleanField(default=False)
     has_management_data_cached = models.BooleanField(default=False)
+    termination_in_scope_cached = models.BooleanField(default=False)
+    termination_current_stage_cached = models.PositiveSmallIntegerField(blank=True, null=True)
+    termination_status_cached = models.CharField(max_length=50, blank=True, null=True)
+    termination_type_cached = models.CharField(max_length=30, blank=True, null=True)
+    termination_reference_date_cached = models.DateField(blank=True, null=True)
+    termination_coordinator_cached = models.CharField(max_length=255, blank=True, null=True)
+    termination_has_history_cached = models.BooleanField(default=False)
+    termination_closed_cached = models.BooleanField(default=False)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -154,3 +172,56 @@ class Employee(models.Model):
 
     def __str__(self):
         return f"{self.employee_code} - {self.name}"
+
+
+class DismissalRecord(models.Model):
+    employee = models.OneToOneField(
+        Employee,
+        on_delete=models.CASCADE,
+        related_name="dismissal_record",
+    )
+    employee_code = models.CharField(max_length=20, unique=True)
+    name = models.CharField(max_length=255)
+    admission_date = models.DateField(blank=True, null=True)
+    dismissal_date = models.DateField(blank=True, null=True)
+    first_contract_end_date = models.DateField(blank=True, null=True)
+    second_contract_end_date = models.DateField(blank=True, null=True)
+    payroll_status = models.CharField(max_length=20, blank=True, null=True)
+    management_status = models.CharField(max_length=50, blank=True, null=True)
+    store_name = models.CharField(max_length=255, blank=True, null=True)
+    management_store_name = models.CharField(max_length=255, blank=True, null=True)
+    geo_store_name = models.CharField(max_length=255, blank=True, null=True)
+    totvs_job_title = models.CharField(max_length=255, blank=True, null=True)
+    management_job_title = models.CharField(max_length=255, blank=True, null=True)
+    geo_job_title = models.CharField(max_length=255, blank=True, null=True)
+    comparison_status = models.CharField(max_length=20, default="pending")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-dismissal_date", "name"]
+
+    def __str__(self):
+        return f"{self.employee_code} - {self.name}"
+
+
+class TerminationControl(models.Model):
+    employee = models.ForeignKey(
+        Employee,
+        on_delete=models.CASCADE,
+        related_name="termination_controls",
+    )
+    employee_code = models.CharField(max_length=20)
+    stage = models.PositiveSmallIntegerField()
+    action = models.CharField(max_length=20)
+    observation = models.TextField()
+    responded_by = models.CharField(max_length=255, blank=True, null=True)
+    responded_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-responded_at", "-created_at"]
+
+    def __str__(self):
+        return f"{self.employee_code} - etapa {self.stage} - {self.action}"

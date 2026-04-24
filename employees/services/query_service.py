@@ -1,7 +1,7 @@
 from django.core.paginator import Paginator
 from django.db.models import Q
 
-from employees.models import Employee
+from employees.models import DismissalRecord, Employee
 
 
 EMPLOYEES_PER_PAGE = 12
@@ -14,7 +14,8 @@ EMPLOYEE_FILTER_TO_FIELD = {
 
 
 def get_base_employees_queryset():
-    return Employee.objects.filter(is_active=True).select_related("store").order_by("name")
+    dismissed_employee_ids = DismissalRecord.objects.values_list("employee_id", flat=True)
+    return Employee.objects.filter(is_active=True).exclude(id__in=dismissed_employee_ids).select_related("store").order_by("name")
 
 
 def apply_employee_search(queryset, search):

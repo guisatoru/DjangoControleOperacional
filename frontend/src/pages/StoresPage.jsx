@@ -106,6 +106,32 @@ function StoresPage() {
         <span className="total-badge">Lojas com quadro: {summary.total_stores || 0}</span>
       </div>
 
+      <div className="summary-metric-grid">
+        <article className="summary-metric-card neutral">
+          <span>Total de lojas</span>
+          <strong>{summary.total_stores || 0}</strong>
+          <p>Lojas com quadro contratado maior que zero.</p>
+        </article>
+
+        <article className="summary-metric-card info">
+          <span>No quadro</span>
+          <strong>{summary.total_balanced || 0}</strong>
+          <p>Unidades alinhadas com o contratado.</p>
+        </article>
+
+        <article className="summary-metric-card warning">
+          <span>Excedente</span>
+          <strong>{summary.total_excess || 0}</strong>
+          <p>Acima do quadro contratado.</p>
+        </article>
+
+        <article className="summary-metric-card danger">
+          <span>Deficit</span>
+          <strong>{summary.total_deficit || 0}</strong>
+          <p>Abaixo do quadro contratado.</p>
+        </article>
+      </div>
+
       <div className="filters">
         <button
           type="button"

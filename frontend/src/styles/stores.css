@@ -1,24 +1,27 @@
 .stores-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
-  min-height: 1180px;
+  gap: 18px;
   align-content: start;
 }
 
 .store-card {
-  background: var(--color-surface);
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
   border: 1px solid var(--color-border);
-  border-radius: 20px;
-  padding: 18px;
-  box-shadow: var(--shadow-soft);
-
-  height: 285px;
+  border-radius: 28px;
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+  min-height: 300px;
   display: grid;
-  grid-template-rows: 58px 74px 1fr;
-  gap: 14px;
-
+  grid-template-rows: 64px 86px 1fr;
+  gap: 16px;
   overflow: hidden;
+  cursor: pointer;
+}
+
+.store-card:hover {
+  border-color: var(--color-border-strong);
+  background: #ffffff;
 }
 
 .store-card-header {
@@ -27,23 +30,22 @@
   gap: 14px;
   align-items: flex-start;
   border-bottom: 1px solid #edf2f7;
-  padding-bottom: 12px;
-  min-height: 0;
+  padding-bottom: 14px;
 }
 
 .store-card-header h2 {
-  margin: 0 0 6px;
+  margin: 0 0 7px;
   font-size: 15px;
-  line-height: 1.2;
+  line-height: 1.25;
   font-weight: 800;
   letter-spacing: -0.01em;
   text-transform: uppercase;
-
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  color: var(--color-card-title);
 }
 
 .store-card-header span {
@@ -54,7 +56,7 @@
 
 .store-status {
   border-radius: var(--radius-pill);
-  padding: 6px 10px;
+  padding: 8px 12px;
   font-size: 11px;
   font-weight: 800;
   white-space: nowrap;
@@ -78,14 +80,14 @@
 .store-numbers {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
+  gap: 12px;
 }
 
 .store-numbers div {
   background: var(--color-surface-soft);
-  border: 1px solid #edf2f7;
-  border-radius: var(--radius-md);
-  padding: 11px;
+  border: 1px solid #e8eef6;
+  border-radius: 22px;
+  padding: 14px;
   overflow: hidden;
 }
 
@@ -95,64 +97,54 @@
   font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 6px;
+  letter-spacing: 0.08em;
+  margin-bottom: 7px;
   white-space: nowrap;
 }
 
 .store-numbers strong {
-  font-size: 20px;
+  font-size: 28px;
   font-weight: 800;
+  color: var(--color-card-title);
 }
 
 .store-details {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 8px;
-  min-height: 0;
-  overflow: hidden;
+  gap: 9px;
 }
 
 .store-details p {
   margin: 0;
   font-size: 13px;
   display: grid;
-  grid-template-columns: 100px 1fr;
+  grid-template-columns: 108px 1fr;
   gap: 8px;
-  min-height: 22px;
-  overflow: hidden;
 }
 
 .store-details strong {
   color: var(--color-card-label);
   white-space: nowrap;
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.08em;
 }
 
 .store-details span {
   color: var(--color-text);
-  font-weight: 600;
-
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.store-card {
-  cursor: pointer;
-}
-
-.store-card:hover {
-  border-color: #b6c2d2;
-  background: #fbfdff;
-}
-
 .store-modal {
   width: 100%;
   max-width: 980px;
-  background: var(--color-surface);
-  border-radius: 18px;
-  padding: 22px;
-  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.25);
+  background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+  border-radius: 28px;
+  border: 1px solid var(--color-border);
+  padding: 24px;
+  box-shadow: 0 24px 48px rgba(17, 25, 46, 0.22);
 }
 
 .store-modal-numbers {
@@ -163,8 +155,8 @@
 
 .store-modal-numbers div {
   background: var(--color-surface-soft);
-  border: 1px solid #edf2f7;
-  border-radius: var(--radius-md);
+  border: 1px solid #e8eef6;
+  border-radius: 20px;
   padding: 14px;
 }
 
@@ -174,13 +166,14 @@
   font-size: 10px;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   margin-bottom: 8px;
 }
 
 .store-modal-numbers strong {
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 800;
+  color: var(--color-card-title);
 }
 
 .store-modal-status {
@@ -188,8 +181,8 @@
 }
 
 .store-employees-list {
-  border: 1px solid #edf2f7;
-  border-radius: var(--radius-md);
+  border: 1px solid #e8eef6;
+  border-radius: 20px;
   overflow: hidden;
 }
 
@@ -197,7 +190,7 @@
   display: grid;
   grid-template-columns: 1fr 220px;
   gap: 14px;
-  padding: 12px 14px;
+  padding: 13px 14px;
   border-bottom: 1px solid #edf2f7;
   align-items: center;
 }
@@ -225,17 +218,12 @@
 .store-modal-search input {
   width: 100%;
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  padding: 11px 14px;
+  border-radius: 18px;
+  padding: 12px 16px;
   font-size: 14px;
   outline: none;
-  background: var(--color-surface);
+  background: #ffffff;
 }
-
-.store-modal-search input:focus {
-  border-color: #94a3b8;
-}
-
 
 @media (max-width: 700px) {
   .store-modal-numbers {
@@ -247,19 +235,14 @@
   }
 }
 
-
 @media (min-width: 900px) {
   .stores-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    min-height: 1710px;
-    align-content: start;
   }
 }
 
 @media (min-width: 1280px) {
   .stores-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    min-height: 1180px;
-    align-content: start;
   }
 }

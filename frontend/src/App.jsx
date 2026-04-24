@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import AppLayout from "./components/AppLayout";
+import DismissalsPage from "./pages/DismissalsPage";
 import HomePage from "./pages/HomePage";
 import EmployeesPage from "./pages/EmployeesPage";
 import ImportsPage from "./pages/ImportsPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import StoresPage from "./pages/StoresPage";
+import TerminationsPage from "./pages/TerminationsPage";
 import "./App.css";
 
 const VALID_PAGES = [
@@ -12,6 +14,7 @@ const VALID_PAGES = [
   "employees",
   "stores",
   "dismissals",
+  "terminations",
   "imports",
   "reports",
 ];
@@ -61,12 +64,11 @@ function App() {
     }
 
     if (currentPage === "dismissals") {
-      return (
-        <PlaceholderPage
-          title="Demissoes"
-          description="Acompanhamento de colaboradores demitidos e divergencias de desligamento."
-        />
-      );
+      return <DismissalsPage />;
+    }
+
+    if (currentPage === "terminations") {
+      return <TerminationsPage />;
     }
 
     if (currentPage === "imports") {

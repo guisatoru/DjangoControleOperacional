@@ -1,4 +1,5 @@
 import json
+import time
 from urllib import error, request
 
 from django.conf import settings
@@ -14,14 +15,19 @@ GEO_EMPLOYEE_UPDATE_FIELDS = [
     "geo_cost_center_code",
     "geo_store_name",
 ]
+TOKEN_TTL_SECONDS = 4 * 60 * 60
+_TOKEN_CACHE = {
+    "value": None,
+    "fetched_at": 0,
+}
 
-def build_json_request(url, payload=None, token=None, method="POST"):
+def build_json_request(url, payload=None, token=None, method="POST", raw_authorization=False):
     headers = {
         "Accept": "application/json",
     }
 
     if token:
-        headers["Authorization"] = f"Bearer {token}"
+        headers["Authorization"] = token if raw_authorization else f"Bearer {token}"
 
     request_body = None
 
@@ -37,8 +43,14 @@ def build_json_request(url, payload=None, token=None, method="POST"):
     )
 
 
-def send_json_request(url, payload=None, token=None, method="POST"):
-    http_request = build_json_request(url, payload=payload, token=token, method=method)
+def send_json_request(url, payload=None, token=None, method="POST", raw_authorization=False):
+    http_request = build_json_request(
+        url,
+        payload=payload,
+        token=token,
+        method=method,
+        raw_authorization=raw_authorization,
+    )
 
     try:
         with request.urlopen(http_request, timeout=120) as response:
@@ -64,6 +76,13 @@ def extract_bearer_token(login_response):
 
 
 def get_geovictoria_token():
+    now = time.time()
+    cached_token = _TOKEN_CACHE.get("value")
+    cached_at = _TOKEN_CACHE.get("fetched_at", 0)
+
+    if cached_token and (now - cached_at) < TOKEN_TTL_SECONDS:
+        return cached_token
+
     if not settings.GEOVICTORIA_USER or not settings.GEOVICTORIA_PASSWORD:
         raise ValueError(
             "Defina GEOVICTORIA_USER e GEOVICTORIA_PASSWORD no arquivo .env antes de sincronizar."
@@ -74,7 +93,10 @@ def get_geovictoria_token():
         "Password": settings.GEOVICTORIA_PASSWORD,
     }
     login_response = send_json_request(settings.GEOVICTORIA_LOGIN_URL, login_payload)
-    return extract_bearer_token(login_response)
+    token = extract_bearer_token(login_response)
+    _TOKEN_CACHE["value"] = token
+    _TOKEN_CACHE["fetched_at"] = now
+    return token
 
 
 def fetch_geovictoria_users(token):
@@ -93,6 +115,111 @@ def fetch_geovictoria_users(token):
             return value
 
     raise ValueError("Nao foi possivel encontrar a lista de usuarios na resposta do GeoVictoria.")
+
+
+def extract_timeoff_entries(timeoff_response):
+    if isinstance(timeoff_response, list):
+        return timeoff_response
+
+    for key in ["data", "Data", "result", "Result", "TimeOff"]:
+        value = timeoff_response.get(key)
+        if isinstance(value, list):
+            return value
+
+    return []
+
+
+def normalize_timeoff_description(value):
+    return normalize_text(value)
+
+
+def format_timeoff_date(value):
+    raw_value = str(value or "").strip()
+    digits_only = "".join(character for character in raw_value if character.isdigit())
+
+    if len(digits_only) == 8:
+        return f"{digits_only}000000"
+
+    if len(digits_only) == 14:
+        return digits_only
+
+    raise ValueError("Data invalida para consulta de afastamentos na GeoVictoria.")
+
+
+def parse_geovictoria_date(value):
+    digits_only = "".join(character for character in str(value or "") if character.isdigit())
+
+    if len(digits_only) < 8:
+        return None
+
+    year = int(digits_only[0:4])
+    month = int(digits_only[4:6])
+    day = int(digits_only[6:8])
+
+    try:
+        from datetime import date
+
+        return date(year, month, day)
+    except ValueError:
+        return None
+
+
+def get_inclusive_timeoff_days(entry):
+    start_date = parse_geovictoria_date(entry.get("Starts"))
+    end_date = parse_geovictoria_date(entry.get("Ends"))
+
+    if not start_date or not end_date:
+        return 1
+
+    return max(1, (end_date - start_date).days + 1)
+
+
+def get_geovictoria_timeoff_summary(start_date, end_date, user_id):
+    if not user_id:
+        raise ValueError("Identifier da GeoVictoria nao informado.")
+
+    token = get_geovictoria_token()
+    payload = {
+        "StartDate": format_timeoff_date(start_date),
+        "EndDate": format_timeoff_date(end_date),
+        "UserIds": str(user_id),
+    }
+
+    try:
+        timeoff_response = send_json_request(
+            settings.GEOVICTORIA_TIMEOFF_URL,
+            payload=payload,
+            token=token,
+            method="POST",
+        )
+    except ValueError:
+        timeoff_response = send_json_request(
+            settings.GEOVICTORIA_TIMEOFF_URL,
+            payload=payload,
+            token=token,
+            method="POST",
+            raw_authorization=True,
+        )
+    entries = extract_timeoff_entries(timeoff_response)
+
+    medical_certificate_days = 0
+    absences = 0
+
+    for entry in entries:
+        description = normalize_timeoff_description(entry.get("TimeOffTypeDescription"))
+        total_days = get_inclusive_timeoff_days(entry)
+
+        if description == "ATESTADO MEDICO":
+            medical_certificate_days += total_days
+
+        if description == "FALTA":
+            absences += total_days
+
+    return {
+        "medical_certificate_days": medical_certificate_days,
+        "absences": absences,
+        "total_entries": len(entries),
+    }
 
 
 def get_geo_user_identifier(geo_user_data):

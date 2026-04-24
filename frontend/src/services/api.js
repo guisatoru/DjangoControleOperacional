@@ -45,6 +45,63 @@ export async function fetchStoreDetail(storeId) {
   return parseJsonResponse(response, "Erro ao buscar loja.");
 }
 
+export async function fetchDismissals({ page = 1, search = "", filter = "all" } = {}) {
+  const params = new URLSearchParams({
+    page: String(page),
+    search,
+    filter,
+  });
+
+  const response = await fetch(`/api/dismissals/?${params.toString()}`);
+  return parseJsonResponse(response, "Erro ao buscar demissoes.");
+}
+
+export async function fetchDismissalDetail(dismissalId) {
+  const response = await fetch(`/api/dismissals/${dismissalId}/`);
+  return parseJsonResponse(response, "Erro ao buscar demissao.");
+}
+
+export async function fetchTerminations({
+  page = 1,
+  search = "",
+  filter = "all",
+  dateFrom = "",
+  coordinator = "all",
+} = {}) {
+  const params = new URLSearchParams({
+    page: String(page),
+    search,
+    filter,
+    date_from: dateFrom,
+    coordinator,
+  });
+
+  const response = await fetch(`/api/terminations/?${params.toString()}`);
+  return parseJsonResponse(response, "Erro ao buscar terminos.");
+}
+
+export async function fetchTerminationDetail(terminationId) {
+  const response = await fetch(`/api/terminations/${terminationId}/`);
+  return parseJsonResponse(response, "Erro ao buscar termino.");
+}
+
+export async function fetchTerminationTimeOffSummary(terminationId) {
+  const response = await fetch(`/api/terminations/${terminationId}/timeoff/`);
+  return parseJsonResponse(response, "Erro ao buscar faltas e atestados na GeoVictoria.");
+}
+
+export async function saveTerminationControl(terminationId, payload) {
+  const response = await fetch(`/api/terminations/${terminationId}/control/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  return parseJsonResponse(response, "Erro ao salvar controle de termino.");
+}
+
 export async function runImport(files) {
   const formData = new FormData();
 
