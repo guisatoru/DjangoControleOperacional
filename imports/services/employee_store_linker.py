@@ -1,4 +1,5 @@
 from employees.models import Employee
+from employees.services.derived_fields import refresh_employee_and_store_derived_fields
 from stores.models import Store
 
 
@@ -36,5 +37,7 @@ def link_employees_to_stores():
             employee.store = None
             employee.save(update_fields=["store"])
             summary["not_found"] += 1
+
+    refresh_employee_and_store_derived_fields()
 
     return summary

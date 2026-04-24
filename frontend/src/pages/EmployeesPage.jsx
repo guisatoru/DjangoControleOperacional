@@ -1,249 +1,284 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 import EmployeeCard from "../components/EmployeeCard";
 import EmployeeModal from "../components/EmployeeModal";
+import { fetchEmployees, fetchEmployeesSummary } from "../services/api";
 
-const ITEMS_PER_PAGE = 12;
+function EmployeesPage() {
+  const [loading, setLoading] = useState(true);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [summaryErrorMessage, setSummaryErrorMessage] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [searchText, setSearchText] = useState("");
+  const [selectedFilter, setSelectedFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
+  const [employeesResponse, setEmployeesResponse] = useState({
+    results: [],
+    total_items: 0,
+    total_pages: 1,
+  });
+  const [summary, setSummary] = useState({
+    total_employees: 0,
+    total_store_divergences: 0,
+    total_job_title_divergences: 0,
+    total_status_divergences: 0,
+    total_management_duplicates: 0,
+    total_only_totvs: 0,
+  });
 
-function EmployeesPage({ employees, loading, errorMessage }) {
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setSearchText(searchInput);
+      setCurrentPage(1);
+    }, 300);
 
-    const allEmployees = employees;  
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [searchInput]);
 
-    const [searchText, setSearchText] = useState("");
-    const [selectedFilter, setSelectedFilter] = useState("all");
-    const [currentPage, setCurrentPage] = useState(1);
+  useEffect(() => {
+    let cancelled = false;
 
-    const [selectedEmployee, setSelectedEmployee] = useState(null);
+    async function loadSummary() {
+      setSummaryLoading(true);
+      setSummaryErrorMessage("");
 
-    function employeeMatchesSearch(employee) {
-        const search = searchText.trim().toLowerCase();
+      try {
+        const data = await fetchEmployeesSummary();
 
-        if (!search) {
-        return true;
+        if (!cancelled) {
+          setSummary(data);
         }
-
-        const name = employee.name.toLowerCase();
-        const employeeCode = employee.employee_code.toLowerCase();
-
-        return name.includes(search) || employeeCode.includes(search);
+      } catch (error) {
+        if (!cancelled) {
+          setSummaryErrorMessage(error.message);
+        }
+      } finally {
+        if (!cancelled) {
+          setSummaryLoading(false);
+        }
+      }
     }
 
-    function employeeMatchesFilter(employee) {
-        if (selectedFilter === "store_divergence") {
-        return employee.has_store_divergence;
-        }
+    loadSummary();
 
-        if (selectedFilter === "status_divergence") {
-        return employee.has_status_divergence;
-        }
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-        if (selectedFilter === "management_duplicate") {
-        return employee.has_management_duplicate_records;
-        }
+  useEffect(() => {
+    let cancelled = false;
 
-        if (selectedFilter === "only_totvs") {
-        return !employee.has_management_data;
-        }
+    async function loadEmployeesPage() {
+      setLoading(true);
+      setErrorMessage("");
 
-        return true;
+      try {
+        const data = await fetchEmployees({
+          page: currentPage,
+          search: searchText,
+          filter: selectedFilter,
+        });
+
+        if (!cancelled) {
+          setEmployeesResponse(data);
+          setHasLoadedOnce(true);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setErrorMessage(error.message);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
     }
 
-    const filteredEmployees = allEmployees.filter((employee) => {
-        return (
-        employeeMatchesSearch(employee) &&
-        employeeMatchesFilter(employee)
-        );
-    });
+    loadEmployeesPage();
 
-    const totalItems = filteredEmployees.length;
-    const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
+    return () => {
+      cancelled = true;
+    };
+  }, [currentPage, searchText, selectedFilter]);
 
-    const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-    const endIndex = startIndex + ITEMS_PER_PAGE;
-
-    const employeesToShow = filteredEmployees.slice(startIndex, endIndex);
-
-    const totalStoreDivergences = allEmployees.filter(
-        (employee) => employee.has_store_divergence
-    ).length;
-
-    const totalStatusDivergences = allEmployees.filter(
-        (employee) => employee.has_status_divergence
-    ).length;
-
-    const totalManagementDuplicates = allEmployees.filter(
-        (employee) => employee.has_management_duplicate_records
-    ).length;
-
-    const totalOnlyTotvs = allEmployees.filter(
-        (employee) => !employee.has_management_data
-    ).length;
-
-    function goToPreviousPage() {
-        if (currentPage > 1) {
-        setCurrentPage(currentPage - 1);
-        }
+  function goToPreviousPage() {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
     }
+  }
 
-    function goToNextPage() {
-        if (currentPage < totalPages) {
-        setCurrentPage(currentPage + 1);
-        }
+  function goToNextPage() {
+    if (currentPage < (employeesResponse.total_pages || 1)) {
+      setCurrentPage(currentPage + 1);
     }
+  }
 
-    if (loading) {
-        return (
-        <div className="module-loading">
-            <h2>Carregando colaboradores...</h2>
-            <p>Sincronizando dados do módulo.</p>
-        </div>
-        );
-    }
-
-    if (errorMessage) {
-        return <p className="page-message">Erro: {errorMessage}</p>;
-    }
-
+  if (loading && !hasLoadedOnce) {
     return (
-        <div className="module-page">
-        <div className="page-header">
-            <div>
-            <span className="breadcrumb">Plataforma / Colaboradores</span>
-            <h1>Base de Colaboradores</h1>
-            <p>Compare TOTVS, Gestão e GeoVictoria no mesmo cadastro.</p>
-            </div>
-
-            <span className="total-badge">
-            Total: {allEmployees.length}
-            </span>
-        </div>
-
-        <div className="filters">
-            <button
-            type="button"
-            className={selectedFilter === "all" ? "filter-chip active" : "filter-chip"}
-            onClick={() => {
-                setSelectedFilter("all");
-                setCurrentPage(1);
-            }}
-            >
-            Todos: {allEmployees.length}
-            </button>
-
-            <button
-            type="button"
-            className={selectedFilter === "store_divergence" ? "filter-chip danger active" : "filter-chip danger"}
-            onClick={() => {
-                setSelectedFilter("store_divergence");
-                setCurrentPage(1);
-            }}
-            >
-            Divergência de lojas: {totalStoreDivergences}
-            </button>
-
-            <button
-            type="button"
-            className={selectedFilter === "status_divergence" ? "filter-chip warning active" : "filter-chip warning"}
-            onClick={() => {
-                setSelectedFilter("status_divergence");
-                setCurrentPage(1);
-            }}
-            >
-            Status divergente: {totalStatusDivergences}
-            </button>
-
-            <button
-            type="button"
-            className={selectedFilter === "management_duplicate" ? "filter-chip warning active" : "filter-chip warning"}
-            onClick={() => {
-                setSelectedFilter("management_duplicate");
-                setCurrentPage(1);
-            }}
-            >
-            Duplicidade gestão: {totalManagementDuplicates}
-            </button>
-
-            <button
-            type="button"
-            className={selectedFilter === "only_totvs" ? "filter-chip info active" : "filter-chip info"}
-            onClick={() => {
-                setSelectedFilter("only_totvs");
-                setCurrentPage(1);
-            }}
-            >
-            Só TOTVS: {totalOnlyTotvs}
-            </button>
-        </div>
-
-        <div className="search-area">
-            <input
-            type="text"
-            value={searchText}
-            onChange={(event) => {
-                setSearchText(event.target.value);
-                setCurrentPage(1);
-            }}
-            placeholder="Pesquisar por RE ou nome..."
-            />
-
-            {searchText && (
-            <button
-                type="button"
-                onClick={() => {
-                    setSearchText("");
-                    setCurrentPage(1);
-                }}
-            >
-                Limpar
-            </button>
-            )}
-        </div>
-
-        <div className="list-summary">
-            Exibindo {employeesToShow.length} de {totalItems} colaboradores encontrados
-        </div>
-
-        <div className="employees-grid">
-            {employeesToShow.map((employee) => (
-            <EmployeeCard
-                key={employee.id}
-                employee={employee}
-                onClick={() => setSelectedEmployee(employee)}
-            />
-            ))}
-        </div>
-
-        {employeesToShow.length === 0 && (
-            <p className="page-message">Nenhum colaborador encontrado.</p>
-        )}
-
-        <div className="pagination">
-            <button
-            type="button"
-            onClick={goToPreviousPage}
-            disabled={currentPage === 1}
-            >
-            Anterior
-            </button>
-
-            <span>
-            Página {currentPage} de {totalPages}
-            </span>
-
-            <button
-            type="button"
-            onClick={goToNextPage}
-            disabled={currentPage === totalPages}
-            >
-            Próxima
-            </button>
-        </div>
-
-        <EmployeeModal
-            employee={selectedEmployee}
-            onClose={() => setSelectedEmployee(null)}
-        />
-        </div>
+      <div className="module-loading">
+        <h2>Carregando colaboradores...</h2>
+        <p>Sincronizando dados do modulo.</p>
+      </div>
     );
+  }
+
+  if (errorMessage) {
+    return <p className="page-message">Erro: {errorMessage}</p>;
+  }
+
+  const employeesToShow = employeesResponse.results || [];
+  const totalItems = employeesResponse.total_items || 0;
+  const totalPages = employeesResponse.total_pages || 1;
+
+  return (
+    <div className="module-page">
+      <div className="page-header">
+        <div>
+          <span className="breadcrumb">Plataforma / Colaboradores</span>
+          <h1>Base de Colaboradores</h1>
+          <p>Compare TOTVS, Gestao e GeoVictoria no mesmo cadastro.</p>
+        </div>
+
+        <span className="total-badge">
+          Total: {summaryLoading ? "..." : summary.total_employees || 0}
+        </span>
+      </div>
+
+      {summaryErrorMessage && (
+        <p className="page-message">Erro no resumo: {summaryErrorMessage}</p>
+      )}
+
+      <div className="filters">
+        <button
+          type="button"
+          className={selectedFilter === "all" ? "filter-chip active" : "filter-chip"}
+          onClick={() => {
+            setSelectedFilter("all");
+            setCurrentPage(1);
+          }}
+        >
+          Todos: {summary.total_employees || 0}
+        </button>
+
+        <button
+          type="button"
+          className={selectedFilter === "store_divergence" ? "filter-chip danger active" : "filter-chip danger"}
+          onClick={() => {
+            setSelectedFilter("store_divergence");
+            setCurrentPage(1);
+          }}
+        >
+          Divergencia de lojas: {summary.total_store_divergences || 0}
+        </button>
+
+        <button
+          type="button"
+          className={selectedFilter === "job_title_divergence" ? "filter-chip warning active" : "filter-chip warning"}
+          onClick={() => {
+            setSelectedFilter("job_title_divergence");
+            setCurrentPage(1);
+          }}
+        >
+          Divergencia de funcao: {summary.total_job_title_divergences || 0}
+        </button>
+
+        <button
+          type="button"
+          className={selectedFilter === "status_divergence" ? "filter-chip warning active" : "filter-chip warning"}
+          onClick={() => {
+            setSelectedFilter("status_divergence");
+            setCurrentPage(1);
+          }}
+        >
+          Status divergente: {summary.total_status_divergences || 0}
+        </button>
+
+        <button
+          type="button"
+          className={selectedFilter === "management_duplicate" ? "filter-chip warning active" : "filter-chip warning"}
+          onClick={() => {
+            setSelectedFilter("management_duplicate");
+            setCurrentPage(1);
+          }}
+        >
+          Duplicidade gestao: {summary.total_management_duplicates || 0}
+        </button>
+
+        <button
+          type="button"
+          className={selectedFilter === "only_totvs" ? "filter-chip info active" : "filter-chip info"}
+          onClick={() => {
+            setSelectedFilter("only_totvs");
+            setCurrentPage(1);
+          }}
+        >
+          So TOTVS: {summary.total_only_totvs || 0}
+        </button>
+      </div>
+
+      <div className="search-area">
+        <input
+          type="text"
+          value={searchInput}
+          onChange={(event) => {
+            setSearchInput(event.target.value);
+          }}
+          placeholder="Pesquisar por RE ou nome..."
+        />
+
+        {searchInput && (
+          <button
+            type="button"
+            onClick={() => {
+              setSearchInput("");
+              setSearchText("");
+              setCurrentPage(1);
+            }}
+          >
+            Limpar
+          </button>
+        )}
+      </div>
+
+      <div className="list-summary">
+        Exibindo {employeesToShow.length} de {totalItems} colaboradores encontrados
+      </div>
+
+      <div className="employees-grid">
+        {employeesToShow.map((employee) => (
+          <EmployeeCard
+            key={employee.id}
+            employee={employee}
+            onClick={() => setSelectedEmployeeId(employee.id)}
+          />
+        ))}
+      </div>
+
+      {employeesToShow.length === 0 && (
+        <p className="page-message">Nenhum colaborador encontrado.</p>
+      )}
+
+      <div className="pagination">
+        <button type="button" onClick={goToPreviousPage} disabled={currentPage === 1}>
+          Anterior
+        </button>
+
+        <span>Pagina {currentPage} de {totalPages}</span>
+
+        <button type="button" onClick={goToNextPage} disabled={currentPage === totalPages}>
+          Proxima
+        </button>
+      </div>
+
+      <EmployeeModal employeeId={selectedEmployeeId} onClose={() => setSelectedEmployeeId(null)} />
+    </div>
+  );
 }
 
 export default EmployeesPage;

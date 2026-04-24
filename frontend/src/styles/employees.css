@@ -156,7 +156,8 @@
   box-shadow: var(--shadow-soft);
   text-align: left;
 
-  height: 315px;
+  min-height: 345px;
+  height: auto;
   display: grid;
   grid-template-rows: 52px 28px 1px 1fr 24px;
   gap: 8px;

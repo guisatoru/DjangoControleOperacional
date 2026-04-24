@@ -1,13 +1,12 @@
 from rest_framework import serializers
 
+from employees.api.serializers import EmployeeSerializer
 from stores.models import Store
+from stores.services.query_service import get_store_counted_employees
 
 
 class StoreSerializer(serializers.ModelSerializer):
     management_store_name = serializers.SerializerMethodField()
-    management_headcount = serializers.SerializerMethodField()
-    headcount_difference = serializers.SerializerMethodField()
-    headcount_status = serializers.SerializerMethodField()
 
     class Meta:
         model = Store
@@ -35,11 +34,15 @@ class StoreSerializer(serializers.ModelSerializer):
     def get_management_store_name(self, store):
         return store.name
 
-    def get_management_headcount(self, store):
-        return getattr(store, "management_headcount", 0)
 
-    def get_headcount_difference(self, store):
-        return getattr(store, "headcount_difference", 0)
+class StoreDetailSerializer(StoreSerializer):
+    counted_employees = serializers.SerializerMethodField()
 
-    def get_headcount_status(self, store):
-        return getattr(store, "headcount_status", "balanced")
+    class Meta(StoreSerializer.Meta):
+        fields = StoreSerializer.Meta.fields + [
+            "counted_employees",
+        ]
+
+    def get_counted_employees(self, store):
+        employees = get_store_counted_employees(store)
+        return EmployeeSerializer(employees, many=True).data

@@ -46,6 +46,24 @@ def normalize_text(value):
     return str(value).strip()
 
 
+def normalize_job_title_for_comparison(value):
+    normalized_value = normalize_column_name(value)
+
+    if not normalized_value:
+        return ""
+
+    if "AUXILIAR" in normalized_value:
+        return "AUXILIAR"
+
+    if "ENCARREGAD" in normalized_value:
+        return "ENCARREGADO"
+
+    if "OPERADOR" in normalized_value:
+        return "OPERADOR"
+
+    return normalized_value
+
+
 def parse_date(value):
     if value is None or value == "":
         return None

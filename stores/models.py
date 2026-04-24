@@ -3,7 +3,6 @@ from django.db import models
 class Store(models.Model):
     name = models.CharField(max_length=255)
 
-    management_link_name = models.CharField(max_length=255, blank=True, null=True)
     geo_name = models.CharField(max_length=255, blank=True, null=True)
 
     cost_center = models.CharField(max_length=50, unique=True)
@@ -22,6 +21,10 @@ class Store(models.Model):
     client = models.CharField(max_length=255, blank=True, null=True)
 
     is_active = models.BooleanField(default=True)
+
+    management_headcount = models.IntegerField(default=0)
+    headcount_difference = models.IntegerField(default=0)
+    headcount_status = models.CharField(max_length=20, default="balanced")
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

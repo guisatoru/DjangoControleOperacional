@@ -2,145 +2,91 @@ import { useEffect, useState } from "react";
 import AppLayout from "./components/AppLayout";
 import HomePage from "./pages/HomePage";
 import EmployeesPage from "./pages/EmployeesPage";
+import ImportsPage from "./pages/ImportsPage";
 import PlaceholderPage from "./pages/PlaceholderPage";
 import StoresPage from "./pages/StoresPage";
 import "./App.css";
 
-function App() {
-  const [currentPage, setCurrentPage] = useState("home");
+const VALID_PAGES = [
+  "home",
+  "employees",
+  "stores",
+  "dismissals",
+  "imports",
+  "reports",
+];
 
-  const [employees, setEmployees] = useState([]);
-  const [employeesLoading, setEmployeesLoading] = useState(true);
-  const [employeesError, setEmployeesError] = useState("");
+function getPageFromHash() {
+  const rawHash = window.location.hash.replace(/^#\/?/, "").trim();
 
-  const [stores, setStores] = useState([]);
-  const [storesLoading, setStoresLoading] = useState(true);
-  const [storesError, setStoresError] = useState("");
-
-  useEffect(() => {
-    loadEmployees();
-    loadStores();
-  }, []);
-
-  function loadEmployees() {
-    setEmployeesLoading(true);
-    setEmployeesError("");
-
-    fetch("http://127.0.0.1:8000/api/employees/")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Erro ao buscar colaboradores.");
-        }
-
-        return response.json();
-      })
-      .then((data) => {
-        setEmployees(data.results);
-        setEmployeesLoading(false);
-      })
-      .catch((error) => {
-        setEmployeesError(error.message);
-        setEmployeesLoading(false);
-      });
+  if (VALID_PAGES.includes(rawHash)) {
+    return rawHash;
   }
 
-  function loadStores() {
-    setStoresLoading(true);
-    setStoresError("");
+  return "home";
+}
 
-    fetch("http://127.0.0.1:8000/api/stores/")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Erro ao buscar lojas.");
-        }
+function App() {
+  const [currentPage, setCurrentPage] = useState(getPageFromHash);
 
-        return response.json();
-      })
-      .then((data) => {
-        setStores(data.results);
-        setStoresLoading(false);
-      })
-      .catch((error) => {
-        setStoresError(error.message);
-        setStoresLoading(false);
-      });
+  useEffect(() => {
+    function handleHashChange() {
+      setCurrentPage(getPageFromHash());
+    }
+
+    window.addEventListener("hashchange", handleHashChange);
+    handleHashChange();
+
+    return () => {
+      window.removeEventListener("hashchange", handleHashChange);
+    };
+  }, []);
+
+  function changePage(page) {
+    const targetPage = VALID_PAGES.includes(page) ? page : "home";
+    window.location.hash = `/${targetPage}`;
   }
 
   function renderPage() {
     if (currentPage === "home") {
-      return (
-        <HomePage
-          employees={employees}
-          employeesLoading={employeesLoading}
-          stores={stores}
-          storesLoading={storesLoading}
-        />
-      );
+      return <HomePage onNavigate={changePage} />;
     }
 
     if (currentPage === "employees") {
-      return (
-        <EmployeesPage
-          employees={employees}
-          loading={employeesLoading}
-          errorMessage={employeesError}
-        />
-      );
+      return <EmployeesPage />;
     }
 
     if (currentPage === "stores") {
-      return (
-        <StoresPage
-          stores={stores}
-          employees={employees}
-          loading={storesLoading || employeesLoading}
-          errorMessage={storesError || employeesError}
-        />
-      );
+      return <StoresPage />;
     }
 
     if (currentPage === "dismissals") {
       return (
         <PlaceholderPage
-          title="Demissões"
-          description="Acompanhamento de colaboradores demitidos e divergências de desligamento."
+          title="Demissoes"
+          description="Acompanhamento de colaboradores demitidos e divergencias de desligamento."
         />
       );
     }
 
     if (currentPage === "imports") {
-      return (
-        <PlaceholderPage
-          title="Importações"
-          description="Importação de arquivos da Tabela Mãe, TOTVS e Gestão de Pessoas."
-        />
-      );
+      return <ImportsPage />;
     }
 
     if (currentPage === "reports") {
       return (
         <PlaceholderPage
-          title="Relatórios"
-          description="Área futura para indicadores, gráficos e análises gerenciais."
+          title="Relatorios"
+          description="Area futura para indicadores, graficos e analises gerenciais."
         />
       );
     }
 
-    return (
-      <HomePage
-        employees={employees}
-        employeesLoading={employeesLoading}
-        stores={stores}
-        storesLoading={storesLoading}
-      />
-    );
+    return <HomePage />;
   }
 
   return (
-    <AppLayout
-      currentPage={currentPage}
-      onChangePage={setCurrentPage}
-    >
+    <AppLayout currentPage={currentPage} onChangePage={changePage}>
       {renderPage()}
     </AppLayout>
   );

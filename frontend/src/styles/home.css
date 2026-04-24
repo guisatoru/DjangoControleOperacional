@@ -1,106 +1,58 @@
-.home-kpi-grid {
+.home-module-grid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 16px;
-  margin-bottom: 20px;
 }
 
-.home-kpi-card {
+.home-module-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 20px;
   padding: 20px;
   box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
-.home-kpi-card span {
-  display: block;
-  color: var(--color-card-label);
-  font-size: 11px;
+.home-module-card h2 {
+  margin: 0;
+  font-size: 22px;
   font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  margin-bottom: 10px;
 }
 
-.home-kpi-card strong {
-  display: block;
-  font-size: 30px;
-  line-height: 1;
-  font-weight: 800;
-  color: var(--color-text);
-  margin-bottom: 10px;
-}
-
-.home-kpi-card p {
+.home-module-card p {
   margin: 0;
   color: var(--color-text-muted);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.4;
+  flex: 1;
 }
 
-.home-kpi-card.danger strong {
-  color: var(--color-danger-text);
-}
-
-.home-kpi-card.warning strong {
-  color: var(--color-warning-text);
-}
-
-.home-section-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-}
-
-.home-panel {
-  background: var(--color-surface);
+.home-module-button {
   border: 1px solid var(--color-border);
-  border-radius: 20px;
-  padding: 20px;
-  box-shadow: var(--shadow-soft);
-}
-
-.home-panel h2 {
-  margin: 0 0 16px;
-  font-size: 18px;
-  font-weight: 800;
-}
-
-.home-summary-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 12px 0;
-  border-bottom: 1px solid #edf2f7;
-}
-
-.home-summary-row:last-child {
-  border-bottom: 0;
-}
-
-.home-summary-row span {
-  color: var(--color-text-muted);
-  font-weight: 700;
-}
-
-.home-summary-row strong {
+  border-radius: var(--radius-pill);
+  padding: 12px 16px;
+  background: var(--color-surface-soft);
   color: var(--color-text);
   font-weight: 800;
+  cursor: pointer;
+  align-self: flex-start;
+}
+
+.home-module-button:hover {
+  border-color: #94a3b8;
+  background: #eef4ff;
 }
 
 @media (min-width: 900px) {
-  .home-kpi-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .home-section-grid {
+  .home-module-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (min-width: 1280px) {
-  .home-kpi-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .home-module-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

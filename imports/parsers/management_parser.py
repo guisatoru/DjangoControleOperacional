@@ -1,3 +1,5 @@
+import re
+
 import pandas as pd
 
 from core.utils.normalizers import (
@@ -32,37 +34,61 @@ def normalize_dash(value):
     return value
 
 
+def normalize_sheet_name(value):
+    normalized_value = normalize_column_name(value)
+    normalized_value = re.sub(r"[^A-Z0-9]+", " ", normalized_value)
+    return " ".join(normalized_value.split())
+
+
+def read_excel_sheet_by_alias(file_path, possible_sheet_names):
+    normalized_possible_names = {
+        normalize_sheet_name(name)
+        for name in possible_sheet_names
+    }
+
+    with pd.ExcelFile(file_path) as workbook:
+        for sheet_name in workbook.sheet_names:
+            normalized_sheet_name = normalize_sheet_name(sheet_name)
+
+            if normalized_sheet_name in normalized_possible_names:
+                return pd.read_excel(workbook, sheet_name=sheet_name, dtype=str)
+
+        available_sheet_names = ", ".join(workbook.sheet_names)
+
+    raise ValueError(
+        "Nao foi possivel localizar a aba esperada no arquivo de Gestao. "
+        f"Abas encontradas: {available_sheet_names}"
+    )
+
+
 def parse_management_employees_file(file_path):
-    dataframe = pd.read_excel(
+    dataframe = read_excel_sheet_by_alias(
         file_path,
-        sheet_name="Relação de funcionários",
-        dtype=str,
+        [
+            "RELACAO DE FUNCIONARIOS",
+            "RELAÇÃO DE FUNCIONÁRIOS",
+            "RELACAO_DE_FUNCIONARIOS",
+            "RELAÇÃO_DE_FUNCIONÁRIOS",
+        ],
     )
 
     dataframe = normalize_dataframe_columns(dataframe)
-
     grouped_by_employee_code = {}
 
     for _, row in dataframe.iterrows():
         employee_code = normalize_employee_code(
-            get_value(row, ["CÓD. FUNCIONÁRIO", "COD. FUNCIONARIO"])
+            get_value(row, ["COD. FUNCIONARIO", "COD FUNCIONARIO", "CÓD. FUNCIONÁRIO"])
         )
 
         if not employee_code:
             continue
 
-        status = normalize_text(
-            get_value(row, ["STATUS"])
-        ).upper()
+        status = normalize_text(get_value(row, ["STATUS"])).upper()
 
         employee_data = {
             "employee_code": employee_code,
-            "management_job_title": normalize_text(
-                get_value(row, ["FUNÇÃO", "FUNCAO"])
-            ),
-            "management_store_name": normalize_text(
-                get_value(row, ["LOJA"])
-            ),
+            "management_job_title": normalize_text(get_value(row, ["FUNCAO", "FUNÇÃO"])),
+            "management_store_name": normalize_text(get_value(row, ["LOJA"])),
             "management_status": status,
         }
 
@@ -98,44 +124,33 @@ def parse_management_employees_file(file_path):
 
 
 def parse_management_supervision_file(file_path):
-    dataframe = pd.read_excel(
+    dataframe = read_excel_sheet_by_alias(
         file_path,
-        sheet_name="mapeamento_supervisão",
-        dtype=str,
+        [
+            "MAPEAMENTO SUPERVISAO",
+            "MAPEAMENTO SUPERVISÃO",
+            "MAPEAMENTO_SUPERVISAO",
+            "MAPEAMENTO_SUPERVISÃO",
+        ],
     )
 
     dataframe = normalize_dataframe_columns(dataframe)
-
     stores = []
 
     for _, row in dataframe.iterrows():
-        store_name = normalize_text(
-            get_value(row, ["LOJA"])
-        )
+        store_name = normalize_text(get_value(row, ["LOJA"]))
 
         if not store_name:
             continue
 
-        supervisor = normalize_dash(
-            get_value(row, ["SUPERVISÃO", "SUPERVISAO"])
-        )
+        supervisor = normalize_dash(get_value(row, ["SUPERVISAO", "SUPERVISÃO"]))
+        regional_coordinator = normalize_dash(get_value(row, ["COORDENADOR REGIONAL"]))
+        general_coordinator = normalize_dash(get_value(row, ["COORDENADOR GERAL"]))
 
-        regional_coordinator = normalize_dash(
-            get_value(row, ["COORDENADOR REGIONAL"])
-        )
-
-        general_coordinator = normalize_dash(
-            get_value(row, ["COORDENADOR GERAL"])
-        )
-
-        coordinator = regional_coordinator or general_coordinator
-
-        store_data = {
+        stores.append({
             "store_name": store_name,
             "supervisor": supervisor,
-            "coordinator": coordinator,
-        }
-
-        stores.append(store_data)
+            "coordinator": regional_coordinator or general_coordinator,
+        })
 
     return stores

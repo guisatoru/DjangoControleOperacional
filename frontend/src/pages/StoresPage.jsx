@@ -1,86 +1,63 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 import StoreModal from "../components/StoreModal";
+import { fetchStores } from "../services/api";
 
-const ITEMS_PER_PAGE = 12;
-
-function StoresPage({ stores, employees, loading, errorMessage }) {
+function StoresPage() {
   const [searchText, setSearchText] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-
-  const [selectedStore, setSelectedStore] = useState(null);
-
-  function getStoreAnalysis(store) {
-    return {
-      ...store,
-      activeEmployees: store.management_headcount || 0,
-      contractedHeadcount: store.contracted_headcount || 0,
-      difference: store.headcount_difference || 0,
-      status: store.headcount_status || "balanced",
-    };
-  }
-
-  function storeMatchesSearch(store) {
-    const search = searchText.trim().toLowerCase();
-
-    if (!search) {
-      return true;
-    }
-
-    const name = store.name.toLowerCase();
-    const costCenter = store.cost_center.toLowerCase();
-    const supervisor = (store.supervisor || "").toLowerCase();
-    const coordinator = (store.coordinator || "").toLowerCase();
-
-    return (
-      name.includes(search) ||
-      costCenter.includes(search) ||
-      supervisor.includes(search) ||
-      coordinator.includes(search)
-    );
-  }
-
-  function storeMatchesFilter(store) {
-    if (selectedFilter === "excess") {
-      return store.status === "excess";
-    }
-
-    if (selectedFilter === "deficit") {
-      return store.status === "deficit";
-    }
-
-    if (selectedFilter === "balanced") {
-      return store.status === "balanced";
-    }
-
-    return true;
-  }
-
-  const analyzedStores = stores.map((store) => getStoreAnalysis(store));
-
-  const filteredStores = analyzedStores.filter((store) => {
-    return (
-      storeMatchesSearch(store) &&
-      storeMatchesFilter(store)
-    );
+  const [loading, setLoading] = useState(true);
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [selectedStoreId, setSelectedStoreId] = useState(null);
+  const [storesResponse, setStoresResponse] = useState({
+    results: [],
+    total_items: 0,
+    total_pages: 1,
+    summary: {
+      total_stores: 0,
+      total_balanced: 0,
+      total_deficit: 0,
+      total_excess: 0,
+    },
   });
 
-  const totalItems = filteredStores.length;
-  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE) || 1;
+  useEffect(() => {
+    let cancelled = false;
 
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const endIndex = startIndex + ITEMS_PER_PAGE;
+    async function loadStoresPage() {
+      setLoading(true);
+      setErrorMessage("");
 
-  const storesToShow = filteredStores.slice(startIndex, endIndex);
+      try {
+        const data = await fetchStores({
+          page: currentPage,
+          search: searchText,
+          filter: selectedFilter,
+        });
 
-  const totalExcess = analyzedStores.filter((store) => store.status === "excess").length;
-  const totalDeficit = analyzedStores.filter((store) => store.status === "deficit").length;
-  const totalBalanced = analyzedStores.filter((store) => store.status === "balanced").length;
+        if (!cancelled) {
+          setStoresResponse(data);
+          setHasLoadedOnce(true);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setErrorMessage(error.message);
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      }
+    }
 
-  function handleSearchChange(event) {
-    setSearchText(event.target.value);
-    setCurrentPage(1);
-  }
+    loadStoresPage();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentPage, searchText, selectedFilter]);
 
   function changeFilter(filter) {
     setSelectedFilter(filter);
@@ -94,12 +71,12 @@ function StoresPage({ stores, employees, loading, errorMessage }) {
   }
 
   function goToNextPage() {
-    if (currentPage < totalPages) {
+    if (currentPage < (storesResponse.total_pages || 1)) {
       setCurrentPage(currentPage + 1);
     }
   }
 
-  if (loading) {
+  if (loading && !hasLoadedOnce) {
     return (
       <div className="module-loading">
         <h2>Carregando lojas...</h2>
@@ -112,18 +89,21 @@ function StoresPage({ stores, employees, loading, errorMessage }) {
     return <p className="page-message">Erro: {errorMessage}</p>;
   }
 
+  const storesToShow = storesResponse.results || [];
+  const totalItems = storesResponse.total_items || 0;
+  const totalPages = storesResponse.total_pages || 1;
+  const summary = storesResponse.summary || {};
+
   return (
     <div className="module-page">
       <div className="page-header">
         <div>
           <span className="breadcrumb">Plataforma / Lojas</span>
           <h1>Lojas</h1>
-          <p>Analise quadro contratado, colaboradores ativos, excedentes e déficits.</p>
+          <p>Analise quadro contratado, colaboradores ativos, excedentes e deficits.</p>
         </div>
 
-        <span className="total-badge">
-          Lojas com quadro: {stores.length}
-        </span>
+        <span className="total-badge">Lojas com quadro: {summary.total_stores || 0}</span>
       </div>
 
       <div className="filters">
@@ -132,7 +112,7 @@ function StoresPage({ stores, employees, loading, errorMessage }) {
           className={selectedFilter === "all" ? "filter-chip active" : "filter-chip"}
           onClick={() => changeFilter("all")}
         >
-          Todas: {analyzedStores.length}
+          Todas: {summary.total_stores || 0}
         </button>
 
         <button
@@ -140,7 +120,7 @@ function StoresPage({ stores, employees, loading, errorMessage }) {
           className={selectedFilter === "deficit" ? "filter-chip danger active" : "filter-chip danger"}
           onClick={() => changeFilter("deficit")}
         >
-          Déficit: {totalDeficit}
+          Deficit: {summary.total_deficit || 0}
         </button>
 
         <button
@@ -148,7 +128,7 @@ function StoresPage({ stores, employees, loading, errorMessage }) {
           className={selectedFilter === "excess" ? "filter-chip warning active" : "filter-chip warning"}
           onClick={() => changeFilter("excess")}
         >
-          Excedente: {totalExcess}
+          Excedente: {summary.total_excess || 0}
         </button>
 
         <button
@@ -156,7 +136,7 @@ function StoresPage({ stores, employees, loading, errorMessage }) {
           className={selectedFilter === "balanced" ? "filter-chip info active" : "filter-chip info"}
           onClick={() => changeFilter("balanced")}
         >
-          No quadro: {totalBalanced}
+          No quadro: {summary.total_balanced || 0}
         </button>
       </div>
 
@@ -164,7 +144,10 @@ function StoresPage({ stores, employees, loading, errorMessage }) {
         <input
           type="text"
           value={searchText}
-          onChange={handleSearchChange}
+          onChange={(event) => {
+            setSearchText(event.target.value);
+            setCurrentPage(1);
+          }}
           placeholder="Pesquisar por loja, centro de custo, supervisor ou coordenador..."
         />
 
@@ -187,26 +170,22 @@ function StoresPage({ stores, employees, loading, errorMessage }) {
 
       <div className="stores-grid">
         {storesToShow.map((store) => (
-            <article
-                className="store-card"
-                key={store.id}
-                onClick={() => setSelectedStore(store)}
-            >
+          <article className="store-card" key={store.id} onClick={() => setSelectedStoreId(store.id)}>
             <div className="store-card-header">
               <div>
                 <h2>{store.name}</h2>
                 <span>Centro de custo: {store.cost_center}</span>
               </div>
 
-              {store.status === "deficit" && (
-                <span className="store-status danger">Déficit</span>
+              {store.headcount_status === "deficit" && (
+                <span className="store-status danger">Deficit</span>
               )}
 
-              {store.status === "excess" && (
+              {store.headcount_status === "excess" && (
                 <span className="store-status warning">Excedente</span>
               )}
 
-              {store.status === "balanced" && (
+              {store.headcount_status === "balanced" && (
                 <span className="store-status success">No quadro</span>
               )}
             </div>
@@ -214,17 +193,17 @@ function StoresPage({ stores, employees, loading, errorMessage }) {
             <div className="store-numbers">
               <div>
                 <span>Contratado</span>
-                <strong>{store.contractedHeadcount}</strong>
+                <strong>{store.contracted_headcount || 0}</strong>
               </div>
 
               <div>
                 <span>Ativos</span>
-                <strong>{store.activeEmployees}</strong>
+                <strong>{store.management_headcount || 0}</strong>
               </div>
 
               <div>
-                <span>Diferença</span>
-                <strong>{store.difference}</strong>
+                <span>Diferenca</span>
+                <strong>{store.headcount_difference || 0}</strong>
               </div>
             </div>
 
@@ -255,31 +234,18 @@ function StoresPage({ stores, employees, loading, errorMessage }) {
       )}
 
       <div className="pagination">
-        <button
-          type="button"
-          onClick={goToPreviousPage}
-          disabled={currentPage === 1}
-        >
+        <button type="button" onClick={goToPreviousPage} disabled={currentPage === 1}>
           Anterior
         </button>
 
-        <span>
-          Página {currentPage} de {totalPages}
-        </span>
+        <span>Pagina {currentPage} de {totalPages}</span>
 
-        <button
-          type="button"
-          onClick={goToNextPage}
-          disabled={currentPage === totalPages}
-        >
-          Próxima
+        <button type="button" onClick={goToNextPage} disabled={currentPage === totalPages}>
+          Proxima
         </button>
       </div>
-      <StoreModal
-        store={selectedStore}
-        employees={employees}
-        onClose={() => setSelectedStore(null)}
-      />
+
+      <StoreModal storeId={selectedStoreId} onClose={() => setSelectedStoreId(null)} />
     </div>
   );
 }

@@ -1,5 +1,5 @@
-from stores.models import Store
 from core.utils.normalizers import normalize_column_name
+from stores.models import Store
 
 
 def normalize_store_match(value):
@@ -24,36 +24,36 @@ def import_management_supervision(parsed_stores):
 
     summary["total_management_records"] = len(parsed_stores)
 
-    stores = Store.objects.filter(is_active=True)
-    summary["active_system_stores"] = stores.count()
+    stores = list(Store.objects.filter(is_active=True))
+    summary["active_system_stores"] = len(stores)
+    stores_to_update = []
 
     for store in stores:
-        store_data = management_by_store_name.get(
-            normalize_store_match(store.name)
-        )
+        store_data = management_by_store_name.get(normalize_store_match(store.name))
 
         if not store_data:
             summary["active_system_not_found_in_management"] += 1
             continue
 
-        fields_from_management = {
+        field_values = {
             "supervisor": store_data.get("supervisor"),
             "coordinator": store_data.get("coordinator"),
         }
 
-        changed_fields = []
+        has_changes = False
 
-        for field, new_value in fields_from_management.items():
-            current_value = getattr(store, field)
+        for field_name, new_value in field_values.items():
+            if getattr(store, field_name) != new_value:
+                setattr(store, field_name, new_value)
+                has_changes = True
 
-            if current_value != new_value:
-                setattr(store, field, new_value)
-                changed_fields.append(field)
-
-        if changed_fields:
-            store.save(update_fields=changed_fields)
+        if has_changes:
+            stores_to_update.append(store)
             summary["updated"] += 1
         else:
             summary["unchanged"] += 1
+
+    if stores_to_update:
+        Store.objects.bulk_update(stores_to_update, ["supervisor", "coordinator"])
 
     return summary

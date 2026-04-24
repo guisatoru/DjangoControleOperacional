@@ -7,10 +7,11 @@ class EmployeeSerializer(serializers.ModelSerializer):
     store_id = serializers.SerializerMethodField()
     store_name = serializers.SerializerMethodField()
     supervisor = serializers.SerializerMethodField()
-    has_store_divergence = serializers.SerializerMethodField()
-    has_status_divergence = serializers.SerializerMethodField()
-    has_management_duplicate_records = serializers.SerializerMethodField()
-    has_management_data = serializers.SerializerMethodField()
+    has_store_divergence = serializers.BooleanField(source="has_store_divergence_cached", read_only=True)
+    has_job_title_divergence = serializers.BooleanField(source="has_job_title_divergence_cached", read_only=True)
+    has_status_divergence = serializers.BooleanField(source="has_status_divergence_cached", read_only=True)
+    has_management_duplicate_records = serializers.BooleanField(source="has_management_duplicate_cached", read_only=True)
+    has_management_data = serializers.BooleanField(source="has_management_data_cached", read_only=True)
 
     class Meta:
         model = Employee
@@ -26,6 +27,8 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
             "management_store_name",
             "geo_store_name",
+            "geo_cost_center_code",
+            "geo_job_title",
             "geo_user_id",
 
             "totvs_job_title",
@@ -47,6 +50,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
             "counts_in_store_headcount",
 
             "has_store_divergence",
+            "has_job_title_divergence",
             "has_status_divergence",
             "has_management_duplicate_records",
             "has_management_data",
@@ -70,14 +74,3 @@ class EmployeeSerializer(serializers.ModelSerializer):
 
         return None
 
-    def get_has_store_divergence(self, employee):
-        return employee.has_store_divergence()
-
-    def get_has_status_divergence(self, employee):
-        return employee.has_status_divergence()
-
-    def get_has_management_duplicate_records(self, employee):
-        return employee.has_management_duplicate_records()
-
-    def get_has_management_data(self, employee):
-        return bool(employee.management_status)

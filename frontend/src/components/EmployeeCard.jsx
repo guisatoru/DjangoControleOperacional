@@ -17,14 +17,9 @@ function getInitials(name) {
 
 function EmployeeCard({ employee, onClick }) {
   return (
-    <article
-      className="employee-card"
-      onClick={onClick}
-    >
+    <article className="employee-card" onClick={onClick}>
       <div className="employee-card-top">
-        <div className="employee-avatar">
-          {getInitials(employee.name)}
-        </div>
+        <div className="employee-avatar">{getInitials(employee.name)}</div>
 
         <div className="employee-main-info">
           <h2>{employee.name}</h2>
@@ -33,10 +28,12 @@ function EmployeeCard({ employee, onClick }) {
       </div>
 
       <div className="employee-status-line">
-        {employee.has_store_divergence ? (
-          <span className="mini-badge danger">Divergência de loja</span>
-        ) : (
-          <span className="mini-badge success">Loja consistente</span>
+        {employee.has_store_divergence && (
+          <span className="mini-badge danger">Divergencia de loja</span>
+        )}
+
+        {employee.has_job_title_divergence && (
+          <span className="mini-badge warning">Funcao divergente</span>
         )}
 
         {employee.has_status_divergence && (
@@ -44,11 +41,11 @@ function EmployeeCard({ employee, onClick }) {
         )}
 
         {employee.has_management_duplicate_records && (
-          <span className="mini-badge warning">Duplicidade Gestão</span>
+          <span className="mini-badge warning">Duplicidade Gestao</span>
         )}
 
         {!employee.has_management_data && (
-          <span className="mini-badge info">Só TOTVS</span>
+          <span className="mini-badge info">So TOTVS</span>
         )}
       </div>
 
@@ -61,28 +58,28 @@ function EmployeeCard({ employee, onClick }) {
         </div>
 
         <div className="detail-item">
-          <span>Loja Gestão</span>
+          <span>Loja Gestao</span>
           <strong>{employee.management_store_name || "-"}</strong>
         </div>
 
         <div className="detail-item">
-          <span>Status TOTVS</span>
-          <strong>{employee.payroll_status || "Em branco"}</strong>
+          <span>Loja Geo</span>
+          <strong>{employee.geo_store_name || "-"}</strong>
         </div>
 
         <div className="detail-item">
-          <span>Status Gestão</span>
-          <strong>{employee.management_status || "-"}</strong>
-        </div>
-
-        <div className="detail-item">
-          <span>Função TOTVS</span>
+          <span>Funcao TOTVS</span>
           <strong>{employee.totvs_job_title || "-"}</strong>
         </div>
 
         <div className="detail-item">
-          <span>Função Gestão</span>
+          <span>Funcao Gestao</span>
           <strong>{employee.management_job_title || "-"}</strong>
+        </div>
+
+        <div className="detail-item">
+          <span>Funcao Geo</span>
+          <strong>{employee.geo_job_title || "-"}</strong>
         </div>
       </div>
     </article>

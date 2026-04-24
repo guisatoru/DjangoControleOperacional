@@ -10,10 +10,30 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def load_local_env_file():
+    env_file_path = BASE_DIR / ".env"
+
+    if not env_file_path.exists():
+        return
+
+    for raw_line in env_file_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+
+        key, value = line.split("=", 1)
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
+
+
+load_local_env_file()
 
 
 # Quick-start development settings - unsuitable for production
@@ -132,3 +152,14 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:5173",
     "http://localhost:5173",
 ]
+
+GEOVICTORIA_LOGIN_URL = os.getenv(
+    "GEOVICTORIA_LOGIN_URL",
+    "https://customerapi.geovictoria.com/api/v1/Login",
+)
+GEOVICTORIA_USER_LIST_URL = os.getenv(
+    "GEOVICTORIA_USER_LIST_URL",
+    "https://customerapi.geovictoria.com/api/v1/User/ListComplete",
+)
+GEOVICTORIA_USER = os.getenv("GEOVICTORIA_USER", "")
+GEOVICTORIA_PASSWORD = os.getenv("GEOVICTORIA_PASSWORD", "")

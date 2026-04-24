@@ -2,82 +2,43 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from employees.models import Employee
+from employees.services.query_service import get_employee_summary, paginate_employees
 from .serializers import EmployeeSerializer
 
 
 class EmployeeListAPIView(APIView):
     def get(self, request):
-        employees = Employee.objects.filter(
-            is_active=True
-        ).select_related(
-            "store"
-        ).order_by(
-            "name"
+        selected_filter = request.GET.get("filter", "all")
+        search = request.GET.get("search", "")
+        page_number = request.GET.get("page", 1)
+
+        data = paginate_employees(
+            selected_filter=selected_filter,
+            search=search,
+            page_number=page_number,
         )
 
-        serializer = EmployeeSerializer(employees, many=True)
+        serializer = EmployeeSerializer(data["results"], many=True)
 
         return Response({
-            "total_items": employees.count(),
-            "results": serializer.data
+            "page": data["page_obj"].number,
+            "total_pages": data["page_obj"].paginator.num_pages,
+            "total_items": data["page_obj"].paginator.count,
+            "results": serializer.data,
         })
 
 
 class EmployeeSummaryAPIView(APIView):
     def get(self, request):
-        active_employees = Employee.objects.filter(
-            is_active=True
-        ).select_related(
-            "store"
-        )
-
-        active_employees_list = list(active_employees)
-
-        total_employees = len(active_employees_list)
-
-        total_store_divergences = len([
-            employee for employee in active_employees_list
-            if employee.has_store_divergence()
-        ])
-
-        total_status_divergences = len([
-            employee for employee in active_employees_list
-            if employee.has_status_divergence()
-        ])
-
-        total_management_duplicates = len([
-            employee for employee in active_employees_list
-            if employee.has_management_duplicate_records()
-        ])
-
-        total_only_totvs = len([
-            employee for employee in active_employees_list
-            if not employee.management_status
-        ])
-
-        return Response({
-            "total_employees": total_employees,
-            "total_store_divergences": total_store_divergences,
-            "total_status_divergences": total_status_divergences,
-            "total_management_duplicates": total_management_duplicates,
-            "total_only_totvs": total_only_totvs,
-        })
+        return Response(get_employee_summary())
 
 
 class EmployeeDetailAPIView(APIView):
     def get(self, request, employee_id):
         try:
-            employee = Employee.objects.select_related("store").get(
-                id=employee_id
-            )
+            employee = Employee.objects.select_related("store").get(id=employee_id)
         except Employee.DoesNotExist:
-            return Response(
-                {
-                    "error": "Colaborador não encontrado."
-                },
-                status=404
-            )
+            return Response({"error": "Colaborador nao encontrado."}, status=404)
 
         serializer = EmployeeSerializer(employee)
-
         return Response(serializer.data)
